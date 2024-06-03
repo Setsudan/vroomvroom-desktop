@@ -12,6 +12,9 @@
 
     <h1>Head Rotation</h1>
     <p>Head rotation: {{ headRotation }}</p>
+
+    <h1>Video On/Off</h1>
+    <p>Video on: {{ videoOn }}</p>
   </div>
 </template>
 
@@ -52,6 +55,9 @@ const receivedFace = ref(0);
 // head rotation array
 const headRotation = ref([0, 0]);
 const receivedHeadRotation = ref([0, 0]);
+// Video On/Off
+const videoOn = ref(0);
+const receivedVideoOn = ref(0);
 
 onMounted(() => {
   listen('controller', (event) => {
@@ -59,6 +65,7 @@ onMounted(() => {
     y.value = event.payload.y;
     receivedFace.value = event.payload.face;
     receivedHeadRotation.value = event.payload.headRotation;
+    receivedVideoOn.value = event.payload.videoOn;
   });
 });
 
@@ -81,6 +88,13 @@ watch(receivedHeadRotation, (newHeadRotation) => {
   if (newHeadRotation[0] !== 0 || newHeadRotation[1] !== 0) {
     sendMessage(3, newHeadRotation);
   }
+});
+
+// When we receive a videoOn value, update the videoOn value
+watch(receivedVideoOn, (newVideoOn) => {
+  videoOn.value = newVideoOn;
+  // on: 1, off: 0
+  sendMessage(9, newVideoOn ? 1 : 0);
 });
 
 const sendMessage = (type: number, data: unknown[] | number) => {
