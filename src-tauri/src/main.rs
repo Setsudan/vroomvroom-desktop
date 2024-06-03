@@ -12,9 +12,13 @@ fn main() {
     let mut gilrs = Gilrs::new().unwrap();
     let x = Arc::new(Mutex::new(0));
     let y = Arc::new(Mutex::new(0));
+    // We use the D-pad to change the faces up d-pad adds 1, down subtracts 1
+    // if we go above 7 we go back to 0, if we go below 0 we go to 7
+    let face = Arc::new(Mutex::new(0));
 
     let x_clone = Arc::clone(&x);
     let y_clone = Arc::clone(&y);
+    let face_clone = Arc::clone(&face);
 
     thread::spawn(move || {
         loop {
@@ -32,6 +36,18 @@ fn main() {
                         let mut y = y_clone.lock().unwrap();
                         *y = (value * 100.0) as i32;
                     }
+                    EventType::ButtonChanged(Button::DPadDown, value, ..) => {
+                        if value == 1.0 {
+                            let mut face = face_clone.lock().unwrap();
+                            *face = (*face + 1) % 8;
+                        }
+                    }
+                    EventType::ButtonChanged(Button::DPadUp, value, ..) => {
+                        if value == 1.0 {
+                            let mut face = face_clone.lock().unwrap();
+                            *face = (*face + 7) % 8;
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -45,8 +61,9 @@ fn main() {
             thread::spawn(move || loop {
                 let x = *x.lock().unwrap();
                 let y = *y.lock().unwrap();
+                let face = *face.lock().unwrap();
                 app_handle
-                    .emit_all("controller", json!({ "x": x, "y": y }))
+                    .emit_all("controller", json!({ "x": x, "y": y, "face": face}))
                     .unwrap();
                 thread::sleep(Duration::from_millis(100));
             });
