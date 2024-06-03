@@ -9,6 +9,9 @@
 
     <h1>Face Value</h1>
     <p>Current face: {{ currentFace }}</p>
+
+    <h1>Head Rotation</h1>
+    <p>Head rotation: {{ headRotation }}</p>
   </div>
 </template>
 
@@ -46,12 +49,16 @@ const numberArrayToSend = ref([0, 0, 0, 0]);
 // Face value
 const currentFace = ref(0);
 const receivedFace = ref(0);
+// head rotation array
+const headRotation = ref([0, 0]);
+const receivedHeadRotation = ref([0, 0]);
 
 onMounted(() => {
   listen('controller', (event) => {
     x.value = event.payload.x;
     y.value = event.payload.y;
     receivedFace.value = event.payload.face;
+    receivedHeadRotation.value = event.payload.headRotation;
   });
 });
 
@@ -66,6 +73,14 @@ watch([x, y], ([newX, newY]) => {
 watch(receivedFace, (newFace) => {
   currentFace.value = newFace;
   sendMessage(2, newFace);
+});
+
+// When we receive a head rotation value, update the headRotation value
+watch(receivedHeadRotation, (newHeadRotation) => {
+  headRotation.value = newHeadRotation;
+  if (newHeadRotation[0] !== 0 || newHeadRotation[1] !== 0) {
+    sendMessage(3, newHeadRotation);
+  }
 });
 
 const sendMessage = (type: number, data: unknown[] | number) => {

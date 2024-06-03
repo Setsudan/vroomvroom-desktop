@@ -12,13 +12,16 @@ fn main() {
     let mut gilrs = Gilrs::new().unwrap();
     let x = Arc::new(Mutex::new(0));
     let y = Arc::new(Mutex::new(0));
-    // We use the D-pad to change the faces up d-pad adds 1, down subtracts 1
-    // if we go above 7 we go back to 0, if we go below 0 we go to 7
     let face = Arc::new(Mutex::new(0));
+    // headRotation of both horizontal and vertical are values between 0 and 180 they can not be negative
+    let head_horizontal_rotation = Arc::new(Mutex::new(0));
+    let head_vertical_rotation = Arc::new(Mutex::new(0));
 
     let x_clone = Arc::clone(&x);
     let y_clone = Arc::clone(&y);
     let face_clone = Arc::clone(&face);
+    let head_horizontal_rotation_clone = Arc::clone(&head_horizontal_rotation);
+    let head_vertical_rotation_clone = Arc::clone(&head_vertical_rotation);
 
     thread::spawn(move || {
         loop {
@@ -35,6 +38,17 @@ fn main() {
                     EventType::AxisChanged(gilrs::Axis::LeftStickX, value, ..) => {
                         let mut y = y_clone.lock().unwrap();
                         *y = (value * 100.0) as i32;
+                    }
+                    // We use RightStick to control the head rotation up is up down is down left is left and right is right
+                    EventType::AxisChanged(gilrs::Axis::RightStickX, value, ..) => {
+                        let mut head_horizontal_rotation =
+                            head_horizontal_rotation_clone.lock().unwrap();
+                        *head_horizontal_rotation = (value.max(0.0).min(1.0) * 180.0) as i32;
+                    }
+                    EventType::AxisChanged(gilrs::Axis::RightStickY, value, ..) => {
+                        let mut head_vertical_rotation =
+                            head_vertical_rotation_clone.lock().unwrap();
+                        *head_vertical_rotation = (value.max(0.0).min(1.0) * 180.0) as i32;
                     }
                     EventType::ButtonChanged(Button::DPadDown, value, ..) => {
                         if value == 1.0 {
@@ -62,8 +76,14 @@ fn main() {
                 let x = *x.lock().unwrap();
                 let y = *y.lock().unwrap();
                 let face = *face.lock().unwrap();
+                let head_horizontal_rotation = *head_horizontal_rotation.lock().unwrap();
+                let head_vertical_rotation = *head_vertical_rotation.lock().unwrap();
+                let head_rotation_array = vec![head_horizontal_rotation, head_vertical_rotation];
                 app_handle
-                    .emit_all("controller", json!({ "x": x, "y": y, "face": face}))
+                    .emit_all(
+                        "controller",
+                        json!({ "x": x, "y": y, "face": face, "headRotation": head_rotation_array}),
+                    )
                     .unwrap();
                 thread::sleep(Duration::from_millis(100));
             });
