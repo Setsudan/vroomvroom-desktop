@@ -47,5 +47,5 @@ export function calculateWheelDirections(x: number, y: number, maxInput: number 
   frontRight = Math.max(-maxSpeed, Math.min(maxSpeed, frontRight));
   backRight = Math.max(-maxSpeed, Math.min(maxSpeed, backRight));
 
-  return [frontLeft, frontRight, backRight, backLeft];
+  return [frontLeft, backLeft, frontRight, backRight];
 }
