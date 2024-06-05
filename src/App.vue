@@ -1,20 +1,47 @@
 <template>
   <div>
     <h1>Controller Values</h1>
+    <!-- X is the RB(forward) and LB(backward) values -->
     <p>X: {{ x }}</p>
+    <!-- Y is the LeftStick values -->
     <p>Y: {{ y }}</p>
     <span>
+      <!-- Thoses are the numbers we send to the car it's an array of 4 numbers -->
       Array for the wheels: {{ numberArrayToSend }}
+    </span>
+    <span class="direction">
+      <!-- If y is 0 but X is positive we go forward if X is negative but y is 0 we go backward
+      if x is different than 0 and y is positive we go right if x is different than 0 and y is negative we go left
+      -->
+      <span v-if="y === 0 && x > 0">⬆️</span>
+      <span v-else-if="y === 0 && x < 0">⬇️</span>
+      <span v-else-if="x === 0 && y > 0">➡️</span>
+      <span v-else-if="x === 0 && y < 0">⬅️</span>
+      <!-- If x is positive and y is positive we go diagonaly right -->
+      <span v-else-if="x > 0 && y > 0">↗️</span>
+      <!-- If x is positive and y is negative we go diagonaly left -->
+      <span v-else-if="x > 0 && y < 0">↖️</span>
+      <!-- If x is negative and y is positive we go diagonaly left -->
+      <span v-else-if="x < 0 && y > 0">↙️</span>
+      <!-- If x is negative and y is negative we go diagonaly right -->
+      <span v-else-if="x < 0 && y < 0">↘️</span>
+      <span v-else>
+        <!-- Car is stopped -->
+        🛑
+      </span>
     </span>
 
     <h1>Face Value</h1>
+    <!-- from 0 to 7 -->
     <p>Current face: {{ currentFace }}</p>
 
     <h1>Head Rotation</h1>
+    <!-- Array of 2 number of for the vertical rotation the second for the horizontal -->
     <p>Head rotation: {{ headRotation }}</p>
 
     <h1>Video On/Off</h1>
-    <p>Video on: {{ videoOn }}</p>
+    <span v-if="videoOn">🎥: Video is on</span>
+    <span v-else>🚫: Video is off</span>
   </div>
 </template>
 
@@ -25,8 +52,8 @@ import { calculateWheelDirections } from './calculateWheelDirections';
 
 // WebSocket setup
 const wsTestingServer = 'ws://localhost:8080';
-//const carWebSocket = 'ws://192.168.123.220/carwebsocket';
-const websocketAddress = wsTestingServer;
+const carWebSocket = 'ws://192.168.109.50:7000/carwebsocket';
+const websocketAddress = carWebSocket;
 let ws = new WebSocket(websocketAddress);
 
 ws.onopen = () => {

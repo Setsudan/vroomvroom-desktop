@@ -24,7 +24,7 @@ export function calculateWheelDirections(x: number, y: number, maxInput: number 
     // Turning movement
     const xSpeed = (x / maxInput) * maxSpeed;
     const turnIntensity = Math.abs(y) / maxInput; // Calculate intensity of the turn
-    const adjustedTurnIntensity = turnIntensity > 0.9 ? 0.9 : turnIntensity; // Cap the turn intensity to prevent 0 speed
+    const adjustedTurnIntensity = turnIntensity > 0.75 ? 0.75 : turnIntensity; // Cap the turn intensity to prevent 0 speed
 
     if (y > 0) {
       // Turning right

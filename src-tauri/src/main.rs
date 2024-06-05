@@ -13,8 +13,8 @@ fn main() {
     let x = Arc::new(Mutex::new(0));
     let y = Arc::new(Mutex::new(0));
     let face = Arc::new(Mutex::new(0));
-    let head_horizontal_rotation = Arc::new(Mutex::new(0));
-    let head_vertical_rotation = Arc::new(Mutex::new(0));
+    let head_horizontal_rotation = Arc::new(Mutex::new(90));
+    let head_vertical_rotation = Arc::new(Mutex::new(90));
     // video on is either 0 or 1
     let video_on = Arc::new(Mutex::new(0));
 
@@ -43,25 +43,51 @@ fn main() {
                         let mut y = y_clone.lock().unwrap();
                         *y = (value * 100.0) as i32;
                     }
-                    // We use RightStick to control the head rotation up is up down is down left is left and right is right
-                    EventType::AxisChanged(gilrs::Axis::RightStickX, value, ..) => {
-                        let mut head_horizontal_rotation =
-                            head_horizontal_rotation_clone.lock().unwrap();
-                        *head_horizontal_rotation = (value.max(0.0).min(1.0) * 180.0) as i32;
+                    // We use DPad to control the head rotation
+                    EventType::ButtonChanged(Button::DPadRight, value, ..) => {
+                        if value == 1.0 {
+                            let mut head_horizontal_rotation =
+                                head_horizontal_rotation_clone.lock().unwrap();
+                            if *head_horizontal_rotation < 180 {
+                                *head_horizontal_rotation += 10;
+                            }
+                        }
                     }
-                    EventType::AxisChanged(gilrs::Axis::RightStickY, value, ..) => {
-                        let mut head_vertical_rotation =
-                            head_vertical_rotation_clone.lock().unwrap();
-                        *head_vertical_rotation = (value.max(0.0).min(1.0) * 180.0) as i32;
+                    EventType::ButtonChanged(Button::DPadLeft, value, ..) => {
+                        if value == 1.0 {
+                            let mut head_horizontal_rotation =
+                                head_horizontal_rotation_clone.lock().unwrap();
+                            if *head_horizontal_rotation > 0 {
+                                *head_horizontal_rotation -= 10;
+                            }
+                        }
                     }
-                    // To cycle through the faces we use the DPad Down and Up buttons
+                    EventType::ButtonChanged(Button::DPadUp, value, ..) => {
+                        if value == 1.0 {
+                            let mut head_vertical_rotation =
+                                head_vertical_rotation_clone.lock().unwrap();
+                            if *head_vertical_rotation < 180 {
+                                *head_vertical_rotation += 10;
+                            }
+                        }
+                    }
                     EventType::ButtonChanged(Button::DPadDown, value, ..) => {
+                        if value == 1.0 {
+                            let mut head_vertical_rotation =
+                                head_vertical_rotation_clone.lock().unwrap();
+                            if (*head_vertical_rotation) > 0 {
+                                *head_vertical_rotation -= 10;
+                            }
+                        }
+                    }
+                    // To cycle through the faces we use the West and East buttons
+                    EventType::ButtonChanged(Button::West, value, ..) => {
                         if value == 1.0 {
                             let mut face = face_clone.lock().unwrap();
                             *face = (*face + 1) % 8;
                         }
                     }
-                    EventType::ButtonChanged(Button::DPadUp, value, ..) => {
+                    EventType::ButtonChanged(Button::East, value, ..) => {
                         if value == 1.0 {
                             let mut face = face_clone.lock().unwrap();
                             *face = (*face + 7) % 8;
