@@ -44,7 +44,9 @@
       <!-- If video is on the video influx is availiable on carIp + ':' + carCameraPort -->
       <div>Video influx: {{ carIP + ':' + carCameraPort }}</div>
       <!-- Preview of camera -->
-      <img :src="'http://' + carIP + ':' + carCameraPort" alt="Car camera" />
+      <img :src="`http://${carIP}:${carCameraPort}`" alt="Car camera" ref="carCamera" />
+      <button @click="startRecording">Start Recording</button>
+      <button @click="stopRecording">Stop Recording</button>
     </div>
     <span v-else>🚫: Video is off</span>
 
@@ -77,6 +79,7 @@ import { onMounted } from 'vue';
 import { initializeWebSocket } from './utils/websocket';
 import { initializeControllerEvents, x, y, numberArrayToSend, currentFace, headRotation, videoOn, buzzerOn, ledAnimation } from './utils/controllerEvents';
 import { listen } from '@tauri-apps/api/event';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
 const wsTestingServer = 'ws://localhost:8080';
 const carIP = '192.168.109.50';
@@ -93,7 +96,78 @@ const sensorData = ref({
   buzzer_frequency: 0,
 });
 
+
+const carCamera = ref<HTMLImageElement | null>(null);
+const recording = ref(false);
+const frames: string[] = [];
+let intervalId: number | null = null;
+let ffmpeg: any = null;
+
+const loadFFmpeg = async () => {
+  ffmpeg = createFFmpeg({ log: true });
+  await ffmpeg.load();
+};
+
+const startRecording = () => {
+  recording.value = true;
+  frames.length = 0; // Clear previous frames
+  intervalId = setInterval(captureFrame, 100); // Capture frame every 100ms
+};
+
+const stopRecording = () => {
+  recording.value = false;
+  if (intervalId !== null) clearInterval(intervalId);
+  createVideo();
+};
+
+const captureFrame = () => {
+  if (!recording.value || !carCamera.value) return;
+
+  const imgElement = carCamera.value;
+  const canvas = document.createElement('canvas');
+  canvas.width = imgElement.width;
+  canvas.height = imgElement.height;
+  const context = canvas.getContext('2d');
+  if (context) {
+    context.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+    frames.push(canvas.toDataURL('image/jpeg')); // Store the image data
+  }
+};
+
+const createVideo = async () => {
+  if (!ffmpeg) await loadFFmpeg();
+
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i];
+    const response = await fetch(frame);
+    const blob = await response.blob();
+    const arrayBuffer = await blob.arrayBuffer();
+    ffmpeg.FS('writeFile', `frame${i}.jpg`, new Uint8Array(arrayBuffer));
+  }
+
+  await ffmpeg.run(
+    '-framerate', '10',
+    '-i', 'frame%d.jpg',
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    'output.mp4'
+  );
+
+  const data = ffmpeg.FS('readFile', 'output.mp4');
+  const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
+  const url = URL.createObjectURL(videoBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'recording.mp4';
+  a.click();
+
+  // Clean up the virtual file system
+  ffmpeg.FS('unlink', 'output.mp4');
+  frames.forEach((_, i) => ffmpeg.FS('unlink', `frame${i}.jpg`));
+};
+
 onMounted(() => {
+  loadFFmpeg();
   initializeWebSocket(carWebSocket);
   initializeControllerEvents();
   listen('sensor-data', (event) => {
