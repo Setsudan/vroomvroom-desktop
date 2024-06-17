@@ -1,15 +1,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool};
-use std::thread;
 use std::time::Duration;
-use tauri::Manager;
 
 mod controller;
 mod mqtt;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let x = Arc::new(Mutex::new(0));
     let y = Arc::new(Mutex::new(0));
     let face = Arc::new(Mutex::new(0));
@@ -31,7 +30,7 @@ fn main() {
     );
 
     tauri::Builder::default()
-        .setup(|app| {
+        .setup(move |app| {
             let app_handle = app.handle();
             let x = Arc::clone(&x);
             let y = Arc::clone(&y);
@@ -42,9 +41,21 @@ fn main() {
             let buzzer_on = Arc::clone(&buzzer_on);
             let led_animation = Arc::clone(&led_animation);
 
-            thread::spawn(move || loop {
-                controller::emit_controller_state(&app_handle, &x, &y, &face, &head_horizontal_rotation, &head_vertical_rotation, &video_on, &buzzer_on, &led_animation);
-                thread::sleep(Duration::from_millis(100));
+            tokio::spawn(async move {
+                loop {
+                    controller::emit_controller_state(
+                        &app_handle,
+                        &x,
+                        &y,
+                        &face,
+                        &head_horizontal_rotation,
+                        &head_vertical_rotation,
+                        &video_on,
+                        &buzzer_on,
+                        &led_animation,
+                    );
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                }
             });
 
             let handle = app.handle().clone();

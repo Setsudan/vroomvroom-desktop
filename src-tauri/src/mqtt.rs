@@ -1,9 +1,10 @@
-use rumqttc::{MqttOptions, Client, QoS};
-use serde::{Serialize, Deserialize};
+use rumqttc::{Client, MqttOptions, QoS};
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use tauri::Manager;
 use tokio::task;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SensorData {
     pub battery_voltage: f32,
     pub photosensitive_value: u32,
@@ -16,9 +17,10 @@ pub struct SensorData {
 
 pub async fn mqtt_subscribe(handle: tauri::AppHandle) {
     let mut mqttoptions = MqttOptions::new("tauri_app", "192.168.64.40", 1883);
-    mqttoptions.set_keep_alive(5);
 
-    let (mut client, mut connection) = Client::new(mqttoptions, 10);
+    mqttoptions.set_keep_alive(Duration::from_secs(5));
+
+    let (client, mut connection) = Client::new(mqttoptions, 10);
     client.subscribe("car/sensors", QoS::AtMostOnce).unwrap();
 
     task::spawn(async move {
