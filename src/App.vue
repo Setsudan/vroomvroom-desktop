@@ -58,6 +58,17 @@
       Led Animation number: {{ ledAnimation }}
     </span>
 
+    <h1>Mqtt Data</h1>
+    <div>
+    <p>Battery Voltage: {{ sensorData.battery_voltage }}</p>
+    <p>Photosensitive Value: {{ sensorData.photosensitive_value }}</p>
+    <p>Tracking Module Values: {{ sensorData.tracking_module_values }}</p>
+    <p>Ultrasonic Distance: {{ sensorData.ultrasonic_distance }}</p>
+    <p>Motor Speeds: {{ sensorData.motor_speeds }}</p>
+    <p>Buzzer Status: {{ sensorData.buzzer_status }}</p>
+    <p>Buzzer Frequency: {{ sensorData.buzzer_frequency }}</p>
+  </div>
+
   </div>
 </template>
 
@@ -65,15 +76,29 @@
 import { onMounted } from 'vue';
 import { initializeWebSocket } from './utils/websocket';
 import { initializeControllerEvents, x, y, numberArrayToSend, currentFace, headRotation, videoOn, buzzerOn, ledAnimation } from './utils/controllerEvents';
+import { listen } from '@tauri-apps/api/event';
 
 const wsTestingServer = 'ws://localhost:8080';
 const carIP = '192.168.109.50';
 const carCameraPort = '7000';
 const carWebSocket = 'ws://192.168.109.50/carwebsocket';
 
+const sensorData = ref({
+  battery_voltage: 0,
+  photosensitive_value: 0,
+  tracking_module_values: 0,
+  ultrasonic_distance: 0,
+  motor_speeds: [0, 0, 0, 0],
+  buzzer_status: '',
+  buzzer_frequency: 0,
+});
+
 onMounted(() => {
   initializeWebSocket(carWebSocket);
   initializeControllerEvents();
+  listen('sensor-data', (event) => {
+    sensorData.value = event.payload;
+  });
 });
 </script>
 
