@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1",
+    "@tonejs/midi": "^2.0.28",
+    "mqtt": "^5.7.3",
     "vue": "^3.3.4",
     "websocket": "^1.0.35",
     "ws": "^8.17.0"
@@ -19,6 +21,7 @@
     "@tauri-apps/cli": "^1",
     "@types/ws": "^8.5.10",
     "@vitejs/plugin-vue": "^5.0.4",
+    "sass": "^1.77.5",
     "typescript": "^5.0.2",
     "vite": "^5.0.0",
     "vue-tsc": "^1.8.5"
