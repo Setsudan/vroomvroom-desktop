@@ -57,7 +57,6 @@ export const initializeControllerEvents = () => {
         buzzerOn.value = event.payload.buzzerOn;
         ledAnimation.value = event.payload.ledAnimation;
         ledColors.value = event.payload.ledColors;
-        play_music.value = event.payload.playMusic;
     });
 
     watch([x, y], ([newX, newY]) => {
@@ -94,21 +93,5 @@ export const initializeControllerEvents = () => {
     watch(receivedVideoOn, (newVideoOn) => {
         videoOn.value = newVideoOn;
         sendMessage(9, newVideoOn ? 1 : 0);
-    });
-};
-
-export const sensorData = ref({
-    battery_voltage: 0,
-    photosensitive_value: 0,
-    tracking_module_values: 0,
-    ultrasonic_distance: 0,
-    motor_speeds: [0, 0, 0, 0],
-    buzzer_status: '',
-    buzzer_frequency: 0,
-});
-
-export const initializeMqttEvents = () => {
-    listen('sensor-data', (event) => {
-        sensorData.value = event.payload;
     });
 };

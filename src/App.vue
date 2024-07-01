@@ -1,18 +1,16 @@
 <template>
   <main>
     <button @click="restartWS">Restart WebSocket</button>
+    <button @click="switchToTestingServer">Switch to Testing Server</button>
     <div>
       <h1>Controller Values</h1>
-      <!-- X is the RB(forward) and LB(backward) values -->
       <p>X: {{ x }}</p>
-      <!-- Y is the LeftStick values -->
       <p>Y: {{ y }}</p>
       <span>
         These are the numbers we send to the car. It's an array of 4 numbers.
         Array for the wheels: {{ numberArrayToSend }}
       </span>
       <span class="direction">
-        <!-- Direction indicators based on x and y values -->
         <span v-if="y === 0 && x > 0">⬆️</span>
         <span v-else-if="y === 0 && x < 0">⬇️</span>
         <span v-else-if="x === 0 && y > 0">➡️</span>
@@ -51,35 +49,61 @@
 
       <h1>Mqtt Data</h1>
       <div v-if="sensorData">
-        <p>Battery Voltage: {{ sensorData.battery_voltage }}</p>
-        <p>Photosensitive Value: {{ sensorData.photosensitive_value }}</p>
-        <p>Tracking Module Values: {{ sensorData.tracking_module_values }}</p>
-        <p>Ultrasonic Distance: {{ sensorData.ultrasonic_distance }}</p>
-        <p>Motor Speeds: {{ sensorData.motor_speeds.join(', ') }}</p>
-        <p>Buzzer Status: {{ sensorData.buzzer_status }}</p>
-        <p>Buzzer Frequency: {{ sensorData.buzzer_frequency }}</p>
+        <p>Track: {{ sensorData.track }}</p>
+        <p>Ultrasonic Distance: {{ sensorData.sonar }}</p>
+        <p>Photosensitive Value: {{ sensorData.light }}</p>
       </div>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useMQTT } from './mqttService';
 import { initializeWebSocket } from './utils/websocket';
-import { initializeControllerEvents, x, y, numberArrayToSend, currentFace, headRotation, videoOn, buzzerOn, ledAnimation, sensorData } from './utils/controllerEvents';
+import {
+  initializeControllerEvents,
+  x,
+  y,
+  numberArrayToSend,
+  currentFace,
+  headRotation,
+  videoOn,
+  buzzerOn,
+  ledAnimation,
+} from './utils/controllerEvents';
+
+const { track, sonar, light, initializeMQTT } = useMQTT();
+
+const sensorData = ref({
+  track: track.value,
+  sonar: sonar.value,
+  light: light.value,
+});
+
+watch([track, sonar, light], () => {
+  sensorData.value.track = track.value;
+  sensorData.value.sonar = sonar.value;
+  sensorData.value.light = light.value;
+});
 
 const wsTestingServer = 'ws://localhost:8080';
-const carIP = '192.168.31.50';
+const carIP = '192.168.137.50';
 const carCameraPort = '7000';
-const carWebSocket = `ws://${carIP}/carwebsocket`;
+const carWebSocket = ref(`ws://${carIP}/carwebsocket`);
+
+const switchToTestingServer = () => {
+  carWebSocket.value = wsTestingServer;
+};
 
 const restartWS = () => {
-  initializeWebSocket(carWebSocket);
+  initializeWebSocket(carWebSocket.value);
 };
 
 onMounted(() => {
-  initializeWebSocket(carWebSocket);
+  initializeWebSocket(carWebSocket.value);
   initializeControllerEvents();
+  initializeMQTT();
 });
 </script>
 
