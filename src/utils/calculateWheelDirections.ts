@@ -1,5 +1,5 @@
 const convert100to4095 = (value: number): number => {
-  return value * 4095 / 100;
+  return value * 4000 / 100;
 }
 
 export function calculateWheelDirections(x: number, y: number, maxInput: number = 100): number[] {
@@ -11,8 +11,7 @@ export function calculateWheelDirections(x: number, y: number, maxInput: number 
   // Scaling factors
   const maxSpeed = 4095;  // Maximum speed value for the wheels
   const minSpeed = -4095;  // Minimum speed to apply to the inner wheels to prevent them from being 0
-  const minSpeedDuringTurn = 500;  // Minimum speed to apply to the inner wheels during a turn
-  
+
   let frontLeft = 0;
   let backLeft = 0;
   let frontRight = 0;
@@ -73,8 +72,14 @@ export function calculateWheelDirections(x: number, y: number, maxInput: number 
     }
   }
 
-    return [frontLeft, backLeft, frontRight, backRight];
-  
+  // numbers can't have decimals
+  frontLeft = Math.round(frontLeft);
+  backLeft = Math.round(backLeft);
+  frontRight = Math.round(frontRight);
+  backRight = Math.round(backRight);
+
+  return [frontLeft, backLeft, frontRight, backRight];
+
 }
-  
+
 

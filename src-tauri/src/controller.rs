@@ -122,6 +122,7 @@ fn handle_event(
                 video_on.fetch_xor(true, Ordering::SeqCst);
             }
         }
+        // Buzzer
         EventType::ButtonChanged(Button::South, value, ..) => {
             if value == 1.0 {
                 buzzer_on.fetch_xor(true, Ordering::SeqCst);

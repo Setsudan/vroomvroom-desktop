@@ -2,13 +2,13 @@
 
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
+use std::thread;
 use std::time::Duration;
 
+// Import the controller module
 mod controller;
-mod mqtt;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let x = Arc::new(Mutex::new(0));
     let y = Arc::new(Mutex::new(0));
     let face = Arc::new(Mutex::new(0));
@@ -41,26 +41,19 @@ async fn main() {
             let buzzer_on = Arc::clone(&buzzer_on);
             let led_animation = Arc::clone(&led_animation);
 
-            tokio::spawn(async move {
-                loop {
-                    controller::emit_controller_state(
-                        &app_handle,
-                        &x,
-                        &y,
-                        &face,
-                        &head_horizontal_rotation,
-                        &head_vertical_rotation,
-                        &video_on,
-                        &buzzer_on,
-                        &led_animation,
-                    );
-                    tokio::time::sleep(Duration::from_millis(100)).await;
-                }
-            });
-
-            let handle = app.handle().clone();
-            tokio::spawn(async move {
-                mqtt::mqtt_subscribe(handle).await;
+            thread::spawn(move || loop {
+                controller::emit_controller_state(
+                    &app_handle,
+                    &x,
+                    &y,
+                    &face,
+                    &head_horizontal_rotation,
+                    &head_vertical_rotation,
+                    &video_on,
+                    &buzzer_on,
+                    &led_animation,
+                );
+                thread::sleep(Duration::from_millis(100));
             });
             Ok(())
         })

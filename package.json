@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1",
-    "mqtt": "^5.7.0",
+    "@tonejs/midi": "^2.0.28",
+    "mqtt": "^5.7.3",
     "vue": "^3.3.4",
     "websocket": "^1.0.35",
     "ws": "^8.17.0"
