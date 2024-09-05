@@ -48,15 +48,16 @@ const sendMessage = (type, payload) => {
 };
 
 export const initializeControllerEvents = () => {
-    listen('controller', (event) => {
-        x.value = event.payload.x;
-        y.value = event.payload.y;
-        receivedFace.value = event.payload.face;
-        receivedHeadRotation.value = event.payload.headRotation;
-        receivedVideoOn.value = event.payload.videoOn;
-        buzzerOn.value = event.payload.buzzerOn;
-        ledAnimation.value = event.payload.ledAnimation;
-        ledColors.value = event.payload.ledColors;
+    listen('controller', (event: unknown) => {
+        const payload = event.payload as any;
+        x.value = payload.x;
+        y.value = payload.y;
+        receivedFace.value = payload.face;
+        receivedHeadRotation.value = payload.headRotation;
+        receivedVideoOn.value = payload.videoOn;
+        buzzerOn.value = payload.buzzerOn;
+        ledAnimation.value = payload.ledAnimation;
+        ledColors.value = payload.ledColors;
     });
 
     watch([x, y], ([newX, newY]) => {
