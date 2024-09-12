@@ -132,6 +132,9 @@ function getHeadRotation(rotation: [number, number] | number[]): string {
           <span>Buzzer: 🚨 {{ buzzerOn ? 'On' : 'Off' }}</span>
         </div>
       </div>
+      <input v-model="carIP" placeholder="Car IP" />
+      <button @click="restartWS">Restart WebSocket</button>
+      <button @click="switchToTestingServer">Switch to Testing Server</button>
     </section>
   </main>
 </template>
@@ -181,5 +184,21 @@ span {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+}
+
+input {
+  grid-column: 1 / 5;
+  grid-row: 5;
+
+  padding: 0.5rem;
+  font-size: 1.5rem;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::placeholder {
+    font-size: 1.5rem;
+  }
 }
 </style>
